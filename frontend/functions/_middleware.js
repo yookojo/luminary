@@ -5,7 +5,7 @@ const encoder = new TextEncoder()
 
 function parseCookies(cookieHeader = '') {
   return Object.fromEntries(
-    cookieHeader
+    (cookieHeader || '')
       .split(';')
       .map((part) => part.trim())
       .filter(Boolean)
