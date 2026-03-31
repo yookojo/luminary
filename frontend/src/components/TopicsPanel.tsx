@@ -15,12 +15,12 @@ export default function TopicsPanel({ topics, currentVideoUrl, onSelect }: Props
       width: '100%',
       height: '100%',
       minHeight: 0,
+      overflow: 'hidden',
       background: 'linear-gradient(180deg, rgba(30,16,48,0.92) 0%, rgba(18,14,26,0.98) 55%, rgba(14,12,20,0.98) 100%)',
       borderRadius: '18px',
       border: '1px solid rgba(196,181,253,0.22)',
       display: 'flex',
       flexDirection: 'column',
-      overflow: 'hidden',
       boxShadow: '0 22px 46px rgba(0,0,0,0.28), inset 0 0 0 1px rgba(255,255,255,0.02)',
     }}>
       {/* Header */}
@@ -115,11 +115,40 @@ export default function TopicsPanel({ topics, currentVideoUrl, onSelect }: Props
           50% { transform: translate3d(0, 2px, 0); opacity: 0.92; }
           100% { transform: translate3d(0, 0, 0); opacity: 0.75; }
         }
+
+        .lm-topics-scroll {
+          scrollbar-width: thin;
+          scrollbar-color: rgba(196,181,253,0.38) transparent;
+        }
+
+        .lm-topics-scroll::-webkit-scrollbar {
+          width: 10px;
+        }
+
+        .lm-topics-scroll::-webkit-scrollbar-track {
+          background: transparent;
+        }
+
+        .lm-topics-scroll::-webkit-scrollbar-thumb {
+          background: rgba(196,181,253,0.28);
+          border-radius: 999px;
+          border: 2px solid transparent;
+          background-clip: padding-box;
+        }
+
+        .lm-topics-scroll::-webkit-scrollbar-thumb:hover {
+          background: rgba(196,181,253,0.42);
+          border: 2px solid transparent;
+          background-clip: padding-box;
+        }
       `}</style>
 
       {/* Topic list */}
-      <div style={{
-        flex: 1,
+      <div
+        className="lm-topics-scroll"
+        style={{
+        flex: '1 1 0%',
+        height: 0,
         minHeight: 0,
         overflowY: 'auto',
         overscrollBehavior: 'contain',

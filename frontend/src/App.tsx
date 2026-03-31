@@ -28,6 +28,7 @@ export interface CompletedTopic {
   summary?: string
   keyPoints?: string[]
   videoUrl: string
+  demoGroupId?: string
 }
 
 export interface ChatMessage {
@@ -229,7 +230,7 @@ export default function App() {
       setIsRendering(true)
       try {
         if (STATIC_DEMO_MODE) {
-          const clip = selectDemoAnimation(description, completedTopics.length)
+          const clip = selectDemoAnimation(description, completedTopics)
           if (!clip) {
             setDemoNotice(UNSUPPORTED_DEMO_MESSAGE)
             return `${UNSUPPORTED_DEMO_MESSAGE} Try one of those prompts for the board.`
@@ -248,6 +249,7 @@ export default function App() {
               summary: clip.summary,
               keyPoints: clip.keyPoints,
               videoUrl: playbackUrl,
+              demoGroupId: clip.demoGroupId,
             },
           ]))
           return 'A curated demo animation is now on the board.'
@@ -278,7 +280,7 @@ export default function App() {
         setIsRendering(false)
       }
     },
-    [completedTopics.length],
+    [completedTopics],
   )
 
   const clientTools = useMemo(
