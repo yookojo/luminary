@@ -19,7 +19,23 @@ const DEMO_ANIMATIONS: readonly DemoAnimationEntry[] = [
       'Matrix as a single unit',
     ],
     videoUrl: '/demo-media/matrix-intro.mp4',
-    keywords: ['matrix', 'matrices', '2x2', '2 x 2', 'rows', 'columns', 'grid'],
+    keywords: [
+      'matrix',
+      'matrices',
+      '2x2',
+      '2 x 2',
+      'rows',
+      'columns',
+      'grid',
+      'matrix theory',
+      'linear algebra',
+      'eigenvalue',
+      'eigenvalues',
+      'determinant',
+      'determinants',
+      'eigenvector',
+      'eigenvectors',
+    ],
   },
   {
     title: 'Matrix addition',
@@ -72,7 +88,7 @@ export function selectDemoAnimation(input: string, index = 0): DemoAnimation {
   }
 
   if (text.includes('math') || text.includes('algebra') || text.includes('theory')) {
-    return DEMO_ANIMATIONS[index % DEMO_ANIMATIONS.length]
+    return DEMO_ANIMATIONS[0]
   }
 
   return FALLBACK_ANIMATION

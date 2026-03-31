@@ -141,6 +141,22 @@ function loginPage(error = false) {
           The demo password unlocks a 3-minute AI session. The admin password unlocks full access.
         </div>
 
+        <div class="mb-6 rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-sm text-white/62">
+          This is a curated demo of Luminary's teaching experience. Voice interaction is live, and the visual lessons shown here are representative sample animations.
+        </div>
+
+        <div class="mb-6 rounded-2xl border border-white/10 bg-white/[0.045] px-4 py-4">
+          <p class="mb-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-white/72">Best Demo Topics</p>
+          <div class="flex flex-wrap gap-2">
+            <span class="rounded-full border border-white/10 bg-black/30 px-3 py-1.5 text-xs font-medium text-white/82">2x2 matrices</span>
+            <span class="rounded-full border border-white/10 bg-black/30 px-3 py-1.5 text-xs font-medium text-white/82">matrix addition</span>
+            <span class="rounded-full border border-white/10 bg-black/30 px-3 py-1.5 text-xs font-medium text-white/82">scalar multiplication</span>
+          </div>
+          <p class="mt-3 text-sm leading-6 text-white/72">
+            Built to showcase Luminary's real-time teaching experience for interviews, portfolio review, and product demos.
+          </p>
+        </div>
+
         <form method="POST" action="/__unlock" class="space-y-4">
           <input
             type="password"

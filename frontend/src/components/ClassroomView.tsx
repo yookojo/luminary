@@ -16,6 +16,11 @@ import TopicsPanel from './TopicsPanel'
 // true when running inside the WebSpatial / visionOS app shell
 const IS_SPATIAL = import.meta.env.XR_ENV === 'avp'
 const STATIC_DEMO_MODE = import.meta.env.VITE_STATIC_DEMO_MODE === 'true'
+const STATIC_DEMO_PROMPTS = [
+  '2x2 matrices',
+  'matrix addition',
+  'scalar multiplication',
+] as const
 type NoteItem = { id: string; text: string; createdAt: number }
 
 interface Props {
@@ -273,12 +278,73 @@ export default function ClassroomView({
         display: 'flex', flexDirection: 'column', gap: '6px',
       }}>
         {requestMessages.length === 0 && !isRendering && (
-          <p style={{
-            fontSize: '12px', color: 'rgba(255,255,255,0.34)',
-            fontStyle: 'italic', textAlign: 'center', marginTop: '16px',
-          }}>
-            Ask for another visual and it will appear in your lesson history.
-          </p>
+          STATIC_DEMO_MODE ? (
+            <div
+              style={{
+                marginTop: '10px',
+                padding: '14px',
+                borderRadius: '14px',
+                border: '1px solid rgba(196,181,253,0.14)',
+                background: 'linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.02) 100%)',
+                boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.02)',
+              }}
+            >
+              <p style={{
+                margin: '0 0 6px',
+                fontSize: '11px',
+                fontWeight: 800,
+                letterSpacing: '0.16em',
+                textTransform: 'uppercase',
+                color: 'rgba(226,214,255,0.68)',
+                textAlign: 'center',
+              }}>
+                Strongest Demo Results
+              </p>
+              <p style={{
+                margin: '0 0 12px',
+                fontSize: '12px',
+                lineHeight: 1.55,
+                color: 'rgba(255,255,255,0.72)',
+                textAlign: 'center',
+              }}>
+                Ask naturally, or start with one of these curated visual prompts.
+              </p>
+              <div style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                justifyContent: 'center',
+                gap: '8px',
+              }}>
+                {STATIC_DEMO_PROMPTS.map((prompt) => (
+                  <button
+                    key={prompt}
+                    onClick={() => onSendMessage(prompt)}
+                    style={{
+                      padding: '8px 11px',
+                      borderRadius: '999px',
+                      border: '1px solid rgba(167,72,255,0.26)',
+                      background: 'rgba(124,58,237,0.16)',
+                      color: 'rgba(255,255,255,0.9)',
+                      fontSize: '12px',
+                      fontWeight: 600,
+                      letterSpacing: '-0.01em',
+                      cursor: 'pointer',
+                      boxShadow: '0 10px 20px rgba(0,0,0,0.18)',
+                    }}
+                  >
+                    {prompt}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <p style={{
+              fontSize: '12px', color: 'rgba(255,255,255,0.34)',
+              fontStyle: 'italic', textAlign: 'center', marginTop: '16px',
+            }}>
+              Ask for another visual and it will appear in your lesson history.
+            </p>
+          )
         )}
         {requestMessages.map((msg) => (
           <div key={msg.id} style={{
@@ -443,6 +509,23 @@ export default function ClassroomView({
 
         {/* Right: text toggle */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', zIndex: 2 }}>
+          {STATIC_DEMO_MODE && (
+            <div
+              style={{
+                padding: '7px 12px',
+                borderRadius: '999px',
+                border: '1px solid rgba(167,139,250,0.24)',
+                background: 'rgba(124,58,237,0.12)',
+                color: 'rgba(255,255,255,0.78)',
+                fontSize: '11px',
+                fontWeight: 600,
+                letterSpacing: '0.01em',
+                boxShadow: '0 10px 24px rgba(0,0,0,0.16)',
+              }}
+            >
+              Guided demo: sample visuals active
+            </div>
+          )}
           <button
             onClick={onToggleTextMode}
             title={effectiveTextMode ? 'Text mode active' : 'Switch to text (audio broken?)'}

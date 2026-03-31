@@ -19,6 +19,12 @@ const HERO_PHRASES = [
   'unmissable.',
 ]
 
+const STATIC_DEMO_PROMPTS = [
+  '2x2 matrices',
+  'matrix addition',
+  'scalar multiplication',
+] as const
+
 function buildWaveKeyframes(index: number) {
   const amplitude = WAVE_AMPLITUDES[index] ?? 0.72
 
@@ -45,6 +51,7 @@ interface Props {
 export default function GreetingView({ status, isSpeaking, onStart, onStop, onEnterDirectly, error }: Props) {
   const isConnected = status === 'connected'
   const isConnecting = status === 'connecting'
+  const isStaticDemo = import.meta.env.VITE_STATIC_DEMO_MODE === 'true'
   const isSpatial = typeof document !== 'undefined'
     && document.documentElement.classList.contains('is-spatial')
   const [isWaveformMode, setIsWaveformMode] = useState(false)
@@ -1111,11 +1118,92 @@ export default function GreetingView({ status, isSpeaking, onStart, onStop, onEn
             fontStyle: isConnected ? 'normal' : 'italic',
             minHeight: '20px',
           }}
-        >
-          {isConnecting && 'Connecting…'}
+          >
+            {isConnecting && 'Connecting…'}
           {isConnected && !isSpeaking && "Listening — tell me what you'd like to learn"}
           {isConnected && isSpeaking && 'Speaking…'}
         </p>
+
+        {isStaticDemo && (
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '10px',
+              marginTop: '-2px',
+              maxWidth: '420px',
+            }}
+          >
+            <p
+              style={{
+                margin: 0,
+                maxWidth: '360px',
+                padding: '9px 14px',
+                borderRadius: '999px',
+                border: '1px solid rgba(255,255,255,0.08)',
+                background: 'rgba(255,255,255,0.04)',
+                color: 'rgba(255,255,255,0.74)',
+                fontSize: '11px',
+                fontWeight: 500,
+                lineHeight: 1.5,
+                textAlign: 'center',
+              }}
+            >
+              Guided demo: live voice, curated visual examples.
+            </p>
+
+            {!isConnected && !isConnecting && (
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '8px',
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    letterSpacing: '0.16em',
+                    textTransform: 'uppercase',
+                    color: 'rgba(255,255,255,0.62)',
+                  }}
+                >
+                  Best Demo Prompts
+                </span>
+                <div
+                  style={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    justifyContent: 'center',
+                    gap: '8px',
+                  }}
+                >
+                  {STATIC_DEMO_PROMPTS.map((prompt) => (
+                    <span
+                      key={prompt}
+                      style={{
+                        padding: '8px 12px',
+                        borderRadius: '999px',
+                        border: '1px solid rgba(255,255,255,0.10)',
+                        background: 'rgba(255,255,255,0.035)',
+                        color: 'rgba(255,255,255,0.84)',
+                        fontSize: '12px',
+                        fontWeight: 600,
+                        letterSpacing: '-0.01em',
+                        boxShadow: '0 10px 24px rgba(0,0,0,0.16)',
+                      }}
+                    >
+                      {prompt}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {error && (
           <p
