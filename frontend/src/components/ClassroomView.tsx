@@ -15,6 +15,7 @@ import TopicsPanel from './TopicsPanel'
 
 // true when running inside the WebSpatial / visionOS app shell
 const IS_SPATIAL = import.meta.env.XR_ENV === 'avp'
+const STATIC_DEMO_MODE = import.meta.env.VITE_STATIC_DEMO_MODE === 'true'
 type NoteItem = { id: string; text: string; createdAt: number }
 
 interface Props {
@@ -187,6 +188,7 @@ export default function ClassroomView({
   }, [noteDraft])
 
   const requestMessages = messages.filter((msg) => msg.role === 'user')
+  const effectiveTextMode = STATIC_DEMO_MODE || textMode
 
   const brandIsActive = conversationStatus === 'connected' || conversationStatus === 'connecting'
   const brandGlowStrength = isTalking ? 1 : brandIsActive ? 0.72 : 0.42
@@ -443,14 +445,17 @@ export default function ClassroomView({
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', zIndex: 2 }}>
           <button
             onClick={onToggleTextMode}
-            title={textMode ? 'Switch to voice' : 'Switch to text (audio broken?)'}
+            title={effectiveTextMode ? 'Text mode active' : 'Switch to text (audio broken?)'}
+            disabled={STATIC_DEMO_MODE}
             style={{
               display: 'flex', alignItems: 'center', gap: '5px',
-              background: textMode ? 'rgba(124,58,237,0.18)' : 'rgba(255,255,255,0.04)',
-              border: `1px solid ${textMode ? 'rgba(167,139,250,0.34)' : 'rgba(255,255,255,0.08)'}`,
+              background: effectiveTextMode ? 'rgba(124,58,237,0.18)' : 'rgba(255,255,255,0.04)',
+              border: `1px solid ${effectiveTextMode ? 'rgba(167,139,250,0.34)' : 'rgba(255,255,255,0.08)'}`,
               borderRadius: '999px', padding: '6px 11px',
-              color: textMode ? 'rgba(226,214,255,0.92)' : 'rgba(255,255,255,0.48)',
-              fontSize: '11px', fontWeight: 600, cursor: 'pointer',
+              color: effectiveTextMode ? 'rgba(226,214,255,0.92)' : 'rgba(255,255,255,0.48)',
+              fontSize: '11px', fontWeight: 600,
+              cursor: STATIC_DEMO_MODE ? 'default' : 'pointer',
+              opacity: STATIC_DEMO_MODE ? 0.9 : 1,
               transition: 'all 0.2s',
             }}
           >
@@ -458,7 +463,7 @@ export default function ClassroomView({
               <rect x="2" y="6" width="20" height="12" rx="2"/>
               <path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M8 14h8"/>
             </svg>
-            Text
+            {STATIC_DEMO_MODE ? 'Text Demo' : 'Text'}
           </button>
         </div>
       </div>
@@ -480,7 +485,7 @@ export default function ClassroomView({
         {IS_SPATIAL ? (
           // Spatial mode: teacher + topics live in their own scenes.
           <>
-            {textMode && (
+            {effectiveTextMode && (
               <div style={{ flex: '0 0 25%', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
                 {chatPanel}
               </div>
@@ -497,18 +502,18 @@ export default function ClassroomView({
           // Web mode: left stack (teacher/chat + history) | board right
           <>
             <div style={{
-              flex: '0 0 31%',
-              minHeight: 0,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '10px',
-            }}>
+                flex: '0 0 31%',
+                minHeight: 0,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '10px',
+              }}>
               <div style={{
-                flex: textMode ? '1 1 50%' : '0 0 52%',
+                flex: effectiveTextMode ? '1 1 50%' : '0 0 52%',
                 minHeight: 0,
                 display: 'flex',
               }}>
-                {textMode ? chatPanel : (
+                {effectiveTextMode ? chatPanel : (
                   <TeacherPanelTabs isTalking={isTalking} isSpaceMode={isSpaceMode} />
                 )}
               </div>

@@ -64,3 +64,4 @@ build/
 videos/
 !frontend/public/demo-media/
 !frontend/public/demo-media/*.mp4
+frontend/public/models
