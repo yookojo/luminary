@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { gsap } from 'gsap'
 import { motion, AnimatePresence } from 'framer-motion'
+import { STATIC_DEMO_PROMPTS } from '@/lib/demoCatalog'
 
 const WAVE_BAR_COUNT = 7
 const MIC_FRAGMENT_CLIPS = [
@@ -18,12 +19,6 @@ const HERO_PHRASES = [
   'made for you.',
   'unmissable.',
 ]
-
-const STATIC_DEMO_PROMPTS = [
-  '2x2 matrices',
-  'matrix addition',
-  'scalar multiplication',
-] as const
 
 function buildWaveKeyframes(index: number) {
   const amplitude = WAVE_AMPLITUDES[index] ?? 0.72

@@ -9,6 +9,12 @@ interface DemoAnimationEntry extends DemoAnimation {
   keywords: readonly string[]
 }
 
+export const STATIC_DEMO_PROMPTS = [
+  '2x2 matrices',
+  'matrix addition',
+  'scalar multiplication',
+] as const
+
 const DEMO_ANIMATIONS: readonly DemoAnimationEntry[] = [
   {
     title: 'Introduction to 2x2 matrices',
@@ -61,22 +67,11 @@ const DEMO_ANIMATIONS: readonly DemoAnimationEntry[] = [
   },
 ]
 
-const FALLBACK_ANIMATION: DemoAnimation = {
-  title: 'Concept overview',
-  summary: 'A core idea is introduced with a short visual walkthrough designed for the demo experience.',
-  keyPoints: [
-    'Curated visual explanation',
-    'Designed for a portfolio demo',
-    'Fast playback with no backend render wait',
-  ],
-  videoUrl: '/demo-media/concept-overview.mp4',
-}
-
 function normalizeText(input: string) {
   return input.trim().toLowerCase()
 }
 
-export function selectDemoAnimation(input: string, index = 0): DemoAnimation {
+export function selectDemoAnimation(input: string, index = 0): DemoAnimation | null {
   const text = normalizeText(input)
 
   const exactMatches = DEMO_ANIMATIONS.filter((entry) =>
@@ -87,9 +82,5 @@ export function selectDemoAnimation(input: string, index = 0): DemoAnimation {
     return exactMatches[index % exactMatches.length]
   }
 
-  if (text.includes('math') || text.includes('algebra') || text.includes('theory')) {
-    return DEMO_ANIMATIONS[0]
-  }
-
-  return FALLBACK_ANIMATION
+  return null
 }

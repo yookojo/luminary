@@ -45,6 +45,7 @@ const CONNECTION_FALLBACK_DELAY_MS = 2800
 const PRIMARY_TRANSPORT: ConversationTransport = 'websocket'
 const SECONDARY_TRANSPORT: ConversationTransport = 'webrtc'
 const DEMO_SESSION_ENDED_MESSAGE = 'This 3-minute demo session has ended. Ask for access again to continue.'
+const UNSUPPORTED_DEMO_MESSAGE = 'This guided demo currently shows the strongest visuals for 2x2 matrices, matrix addition, and scalar multiplication.'
 const STATIC_DEMO_MODE = import.meta.env.VITE_STATIC_DEMO_MODE === 'true'
 type ConversationTransport = 'webrtc' | 'websocket'
 
@@ -61,6 +62,7 @@ export default function App() {
   const [accessRole, setAccessRole] = useState<AccessRole>(null)
   const [demoRemainingSeconds, setDemoRemainingSeconds] = useState<number | null>(null)
   const [demoSessionExpired, setDemoSessionExpired] = useState(false)
+  const [demoNotice, setDemoNotice] = useState<string | null>(null)
   const autoKickoffTimerRef = useRef<number | null>(null)
   const connectionFallbackTimerRef = useRef<number | null>(null)
   const pendingAutoKickoffMessageRef = useRef<string | null>(null)
@@ -228,6 +230,12 @@ export default function App() {
       try {
         if (STATIC_DEMO_MODE) {
           const clip = selectDemoAnimation(description, completedTopics.length)
+          if (!clip) {
+            setDemoNotice(UNSUPPORTED_DEMO_MESSAGE)
+            return `${UNSUPPORTED_DEMO_MESSAGE} Try one of those prompts for the board.`
+          }
+
+          setDemoNotice(null)
           const id = String(Date.now())
           const playbackUrl = `${clip.videoUrl}?demo=${id}`
 
@@ -509,14 +517,15 @@ export default function App() {
         isTalking={conversation.isSpeaking}
         currentVideoUrl={currentVideoUrl}
         isRendering={isRendering}
-        completedTopics={completedTopics}
-        onSelectTopic={setCurrentVideoUrl}
-        conversationStatus={conversation.status}
-        isSpaceMode={isSpaceMode}
-        textMode={textMode}
-        onToggleTextMode={() => setTextMode((v) => !v)}
-        messages={messages}
-        onSendMessage={handleSendMessage}
+      completedTopics={completedTopics}
+      onSelectTopic={setCurrentVideoUrl}
+      conversationStatus={conversation.status}
+      isSpaceMode={isSpaceMode}
+      textMode={textMode}
+      demoNotice={demoNotice}
+      onToggleTextMode={() => setTextMode((v) => !v)}
+      messages={messages}
+      onSendMessage={handleSendMessage}
       />
       {timerBadge}
     </>

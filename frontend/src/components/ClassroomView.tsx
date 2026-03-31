@@ -8,6 +8,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { initScene } from '@webspatial/react-sdk'
 import { gsap } from 'gsap'
 import type { LessonInfo, CompletedTopic, ChatMessage } from '@/App'
+import { STATIC_DEMO_PROMPTS } from '@/lib/demoCatalog'
 import TeacherPanelTabs from './TeacherPanelTabs'
 import BoardPanel from './BoardPanel'
 import NotesBar from './NotesBar'
@@ -16,11 +17,6 @@ import TopicsPanel from './TopicsPanel'
 // true when running inside the WebSpatial / visionOS app shell
 const IS_SPATIAL = import.meta.env.XR_ENV === 'avp'
 const STATIC_DEMO_MODE = import.meta.env.VITE_STATIC_DEMO_MODE === 'true'
-const STATIC_DEMO_PROMPTS = [
-  '2x2 matrices',
-  'matrix addition',
-  'scalar multiplication',
-] as const
 type NoteItem = { id: string; text: string; createdAt: number }
 
 interface Props {
@@ -33,6 +29,7 @@ interface Props {
   conversationStatus: 'disconnected' | 'connecting' | 'connected' | 'disconnecting'
   isSpaceMode: boolean
   textMode: boolean
+  demoNotice: string | null
   onToggleTextMode: () => void
   messages: ChatMessage[]
   onSendMessage: (text: string) => void
@@ -48,6 +45,7 @@ export default function ClassroomView({
   conversationStatus,
   isSpaceMode,
   textMode,
+  demoNotice,
   onToggleTextMode,
   messages,
   onSendMessage,
@@ -277,74 +275,92 @@ export default function ClassroomView({
         flex: 1, minHeight: 0, overflowY: 'auto', padding: '10px',
         display: 'flex', flexDirection: 'column', gap: '6px',
       }}>
-        {requestMessages.length === 0 && !isRendering && (
-          STATIC_DEMO_MODE ? (
-            <div
-              style={{
-                marginTop: '10px',
-                padding: '14px',
-                borderRadius: '14px',
-                border: '1px solid rgba(196,181,253,0.14)',
-                background: 'linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.02) 100%)',
-                boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.02)',
-              }}
-            >
-              <p style={{
-                margin: '0 0 6px',
-                fontSize: '11px',
-                fontWeight: 800,
-                letterSpacing: '0.16em',
-                textTransform: 'uppercase',
-                color: 'rgba(226,214,255,0.68)',
-                textAlign: 'center',
-              }}>
-                Strongest Demo Results
-              </p>
-              <p style={{
-                margin: '0 0 12px',
-                fontSize: '12px',
-                lineHeight: 1.55,
-                color: 'rgba(255,255,255,0.72)',
-                textAlign: 'center',
-              }}>
-                Ask naturally, or start with one of these curated visual prompts.
-              </p>
-              <div style={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                justifyContent: 'center',
-                gap: '8px',
-              }}>
-                {STATIC_DEMO_PROMPTS.map((prompt) => (
-                  <button
-                    key={prompt}
-                    onClick={() => onSendMessage(prompt)}
-                    style={{
-                      padding: '8px 11px',
-                      borderRadius: '999px',
-                      border: '1px solid rgba(167,72,255,0.26)',
-                      background: 'rgba(124,58,237,0.16)',
-                      color: 'rgba(255,255,255,0.9)',
-                      fontSize: '12px',
-                      fontWeight: 600,
-                      letterSpacing: '-0.01em',
-                      cursor: 'pointer',
-                      boxShadow: '0 10px 20px rgba(0,0,0,0.18)',
-                    }}
-                  >
-                    {prompt}
-                  </button>
-                ))}
-              </div>
-            </div>
-          ) : (
+        {STATIC_DEMO_MODE && (
+          <div
+            style={{
+              marginBottom: '8px',
+              padding: '14px',
+              borderRadius: '14px',
+              border: '1px solid rgba(196,181,253,0.14)',
+              background: 'linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.02) 100%)',
+              boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.02)',
+            }}
+          >
             <p style={{
-              fontSize: '12px', color: 'rgba(255,255,255,0.34)',
-              fontStyle: 'italic', textAlign: 'center', marginTop: '16px',
+              margin: '0 0 6px',
+              fontSize: '11px',
+              fontWeight: 800,
+              letterSpacing: '0.16em',
+              textTransform: 'uppercase',
+              color: 'rgba(226,214,255,0.68)',
+              textAlign: 'center',
             }}>
-              Ask for another visual and it will appear in your lesson history.
+              Strongest Demo Results
             </p>
-          )
+            <p style={{
+              margin: '0 0 12px',
+              fontSize: '12px',
+              lineHeight: 1.55,
+              color: 'rgba(255,255,255,0.72)',
+              textAlign: 'center',
+            }}>
+              Ask naturally, or start with one of these guided visual prompts.
+            </p>
+            <div style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              justifyContent: 'center',
+              gap: '8px',
+            }}>
+              {STATIC_DEMO_PROMPTS.map((prompt) => (
+                <button
+                  key={prompt}
+                  onClick={() => onSendMessage(prompt)}
+                  style={{
+                    padding: '8px 11px',
+                    borderRadius: '999px',
+                    border: '1px solid rgba(167,72,255,0.26)',
+                    background: 'rgba(124,58,237,0.16)',
+                    color: 'rgba(255,255,255,0.9)',
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    letterSpacing: '-0.01em',
+                    cursor: 'pointer',
+                    boxShadow: '0 10px 20px rgba(0,0,0,0.18)',
+                  }}
+                >
+                  {prompt}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {STATIC_DEMO_MODE && demoNotice && (
+          <div
+            style={{
+              marginBottom: '8px',
+              padding: '12px 14px',
+              borderRadius: '14px',
+              border: '1px solid rgba(250,204,21,0.22)',
+              background: 'rgba(250,204,21,0.08)',
+              color: 'rgba(255,245,200,0.92)',
+              fontSize: '12px',
+              lineHeight: 1.55,
+              boxShadow: '0 12px 28px rgba(0,0,0,0.16)',
+            }}
+          >
+            {demoNotice} Try one of the guided prompts above for the strongest board visuals.
+          </div>
+        )}
+
+        {requestMessages.length === 0 && !isRendering && !STATIC_DEMO_MODE && (
+          <p style={{
+            fontSize: '12px', color: 'rgba(255,255,255,0.34)',
+            fontStyle: 'italic', textAlign: 'center', marginTop: '16px',
+          }}>
+            Ask for another visual and it will appear in your lesson history.
+          </p>
         )}
         {requestMessages.map((msg) => (
           <div key={msg.id} style={{
