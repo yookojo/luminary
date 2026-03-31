@@ -42,6 +42,8 @@ const DEMO_ANIMATION_GROUPS: readonly DemoAnimationGroup[] = [
   {
     groupId: 'matrix_intro',
     keywords: [
+      '2x2 matrices',
+      '2x2 matrix',
       'matrix',
       'matrices',
       '2x2',
@@ -103,7 +105,7 @@ const DEMO_ANIMATION_GROUPS: readonly DemoAnimationGroup[] = [
   },
   {
     groupId: 'matrix_addition',
-    keywords: ['matrix addition', 'add matrix', 'add matrices', 'corresponding', 'sum', 'plus'],
+    keywords: ['matrix addition', 'add matrix', 'add matrices', 'corresponding entries', 'corresponding', 'sum', 'plus'],
     clips: [
       {
         title: 'Matrix addition',
@@ -129,7 +131,7 @@ const DEMO_ANIMATION_GROUPS: readonly DemoAnimationGroup[] = [
   },
   {
     groupId: 'scalar_multiplication',
-    keywords: ['scalar', 'vector', 'scale', 'scaled', 'magnitude', 'direction', 'stretch', 'shrink'],
+    keywords: ['scalar multiplication', 'scalar', 'vector', 'scale', 'scaled', 'magnitude', 'direction', 'stretch', 'shrink'],
     clips: [
       {
         title: 'Scalar multiplication',
@@ -349,10 +351,29 @@ function normalizeText(input: string) {
 
 function findDemoGroup(input: string) {
   const text = normalizeText(input)
+  let bestMatch: { group: DemoAnimationGroup; score: number } | null = null
 
-  return DEMO_ANIMATION_GROUPS.find((group) =>
-    group.keywords.some((keyword) => text.includes(keyword)),
-  ) ?? null
+  for (const group of DEMO_ANIMATION_GROUPS) {
+    for (const rawKeyword of group.keywords) {
+      const keyword = normalizeText(rawKeyword)
+      if (!text.includes(keyword)) {
+        continue
+      }
+
+      let score = keyword.length
+      if (text === keyword) {
+        score += 1000
+      } else if (text.startsWith(keyword)) {
+        score += 250
+      }
+
+      if (!bestMatch || score > bestMatch.score) {
+        bestMatch = { group, score }
+      }
+    }
+  }
+
+  return bestMatch?.group ?? null
 }
 
 export function selectDemoAnimation(
