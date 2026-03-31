@@ -25,6 +25,7 @@ interface Props {
   currentVideoUrl: string | null
   isRendering: boolean
   completedTopics: CompletedTopic[]
+  demoLibraryTopics: CompletedTopic[]
   onSelectTopic: (url: string) => void
   conversationStatus: 'disconnected' | 'connecting' | 'connected' | 'disconnecting'
   isSpaceMode: boolean
@@ -41,6 +42,7 @@ export default function ClassroomView({
   currentVideoUrl,
   isRendering,
   completedTopics,
+  demoLibraryTopics,
   onSelectTopic,
   conversationStatus,
   isSpaceMode,
@@ -160,8 +162,13 @@ export default function ClassroomView({
 
   // Keep Topics scene in sync with completed topics + active video
   useEffect(() => {
-    channelRef.current?.postMessage({ type: 'topics-state', topics: completedTopics, currentVideoUrl })
-  }, [completedTopics, currentVideoUrl])
+    channelRef.current?.postMessage({
+      type: 'topics-state',
+      topics: completedTopics,
+      libraryTopics: demoLibraryTopics,
+      currentVideoUrl,
+    })
+  }, [completedTopics, currentVideoUrl, demoLibraryTopics])
 
   // Keep Notes scene in sync with notes state
   useEffect(() => {
@@ -426,6 +433,7 @@ export default function ClassroomView({
   const historyPanel = (
     <TopicsPanel
       topics={completedTopics}
+      libraryTopics={demoLibraryTopics}
       currentVideoUrl={currentVideoUrl}
       onSelect={onSelectTopic}
     />

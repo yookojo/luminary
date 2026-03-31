@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react'
 import { useConversation } from '@elevenlabs/react'
 import { renderManim, createObjectUrl, summarizeText } from '@/lib/api'
-import { selectDemoAnimation } from '@/lib/demoCatalog'
+import { getDemoLibraryTopics, selectDemoAnimation, type DemoAnimation } from '@/lib/demoCatalog'
 import GreetingView from '@/components/GreetingView'
 import ClassroomView from '@/components/ClassroomView'
 
@@ -39,6 +39,12 @@ export interface ChatMessage {
 
 type AppView = 'greeting' | 'classroom'
 type AccessRole = 'demo' | 'admin' | null
+type ConversationTransport = 'webrtc' | 'websocket'
+
+interface QueuedDemoAnimation extends DemoAnimation {
+  historyId: string
+  playbackUrl: string
+}
 
 const AUTO_KICKOFF_MESSAGE = 'Hi'
 const AUTO_KICKOFF_DELAY_MS = 900
@@ -48,7 +54,6 @@ const SECONDARY_TRANSPORT: ConversationTransport = 'webrtc'
 const DEMO_SESSION_ENDED_MESSAGE = 'This 3-minute demo session has ended. Ask for access again to continue.'
 const UNSUPPORTED_DEMO_MESSAGE = 'This guided demo currently shows the strongest visuals for 2x2 matrices, matrix addition, and scalar multiplication.'
 const STATIC_DEMO_MODE = import.meta.env.VITE_STATIC_DEMO_MODE === 'true'
-type ConversationTransport = 'webrtc' | 'websocket'
 
 export default function App() {
   const [view, setView] = useState<AppView>('greeting')
@@ -64,11 +69,95 @@ export default function App() {
   const [demoRemainingSeconds, setDemoRemainingSeconds] = useState<number | null>(null)
   const [demoSessionExpired, setDemoSessionExpired] = useState(false)
   const [demoNotice, setDemoNotice] = useState<string | null>(null)
+  const [pendingDemoAnimations, setPendingDemoAnimations] = useState<QueuedDemoAnimation[]>([])
   const autoKickoffTimerRef = useRef<number | null>(null)
   const connectionFallbackTimerRef = useRef<number | null>(null)
   const pendingAutoKickoffMessageRef = useRef<string | null>(null)
   const sawAgentResponseRef = useRef(false)
   const activeTransportRef = useRef<ConversationTransport>(PRIMARY_TRANSPORT)
+  const completedTopicsRef = useRef<CompletedTopic[]>([])
+  const pendingDemoAnimationsRef = useRef<QueuedDemoAnimation[]>([])
+  const conversationStateRef = useRef<{
+    status: 'disconnected' | 'connecting' | 'connected' | 'disconnecting'
+    isSpeaking: boolean
+  }>({
+    status: 'disconnected',
+    isSpeaking: false,
+  })
+  const wasSpeakingRef = useRef(false)
+
+  const demoLibraryTopics = useMemo<CompletedTopic[]>(
+    () => (
+      STATIC_DEMO_MODE
+        ? getDemoLibraryTopics().map((topic) => ({
+            id: topic.id,
+            title: topic.title,
+            summary: topic.summary,
+            keyPoints: topic.keyPoints,
+            videoUrl: topic.videoUrl,
+            demoGroupId: topic.demoGroupId,
+          }))
+        : []
+    ),
+    [],
+  )
+
+  useEffect(() => {
+    completedTopicsRef.current = completedTopics
+  }, [completedTopics])
+
+  useEffect(() => {
+    pendingDemoAnimationsRef.current = pendingDemoAnimations
+  }, [pendingDemoAnimations])
+
+  const applyDemoAnimation = useCallback((clip: QueuedDemoAnimation) => {
+    setCurrentVideoUrl(clip.playbackUrl)
+    setCompletedTopics((prev) => ([
+      ...prev,
+      {
+        id: clip.historyId,
+        title: clip.title,
+        summary: clip.summary,
+        keyPoints: clip.keyPoints,
+        videoUrl: clip.playbackUrl,
+        demoGroupId: clip.demoGroupId,
+      },
+    ]))
+    setDemoNotice(null)
+  }, [])
+
+  const playDemoAnimation = useCallback((description: string, syncWithSpeech: boolean) => {
+    const effectiveHistory = [
+      ...completedTopicsRef.current,
+      ...pendingDemoAnimationsRef.current,
+    ]
+    const clip = selectDemoAnimation(description, effectiveHistory)
+
+    if (!clip) {
+      setDemoNotice(UNSUPPORTED_DEMO_MESSAGE)
+      return `${UNSUPPORTED_DEMO_MESSAGE} Try one of those prompts for the board.`
+    }
+
+    const historyId = String(Date.now() + Math.random())
+    const queuedClip: QueuedDemoAnimation = {
+      ...clip,
+      historyId,
+      playbackUrl: `${clip.videoUrl}?demo=${historyId}`,
+    }
+    const shouldWaitForSpeech = syncWithSpeech
+      && conversationStateRef.current.status === 'connected'
+      && !conversationStateRef.current.isSpeaking
+
+    setDemoNotice(null)
+
+    if (shouldWaitForSpeech) {
+      setPendingDemoAnimations((prev) => [...prev, queuedClip])
+      return 'The next guided board visual is queued and will appear as the explanation continues.'
+    }
+
+    applyDemoAnimation(queuedClip)
+    return 'A curated demo animation is now on the board.'
+  }, [applyDemoAnimation])
 
   const clearAutoKickoffTimer = useCallback(() => {
     if (autoKickoffTimerRef.current !== null) {
@@ -227,34 +316,13 @@ export default function App() {
   const handleRenderAnimation = useCallback(
     async ({ description }: { description: string }) => {
       setIsSpaceMode(isSpaceRelatedQuery(description))
+
+      if (STATIC_DEMO_MODE) {
+        return playDemoAnimation(description, true)
+      }
+
       setIsRendering(true)
       try {
-        if (STATIC_DEMO_MODE) {
-          const clip = selectDemoAnimation(description, completedTopics)
-          if (!clip) {
-            setDemoNotice(UNSUPPORTED_DEMO_MESSAGE)
-            return `${UNSUPPORTED_DEMO_MESSAGE} Try one of those prompts for the board.`
-          }
-
-          setDemoNotice(null)
-          const id = String(Date.now())
-          const playbackUrl = `${clip.videoUrl}?demo=${id}`
-
-          setCurrentVideoUrl(playbackUrl)
-          setCompletedTopics((prev) => ([
-            ...prev,
-            {
-              id,
-              title: clip.title,
-              summary: clip.summary,
-              keyPoints: clip.keyPoints,
-              videoUrl: playbackUrl,
-              demoGroupId: clip.demoGroupId,
-            },
-          ]))
-          return 'A curated demo animation is now on the board.'
-        }
-
         const blob = await renderManim(description)
         const url = createObjectUrl(blob)
         setCurrentVideoUrl(url)
@@ -280,7 +348,7 @@ export default function App() {
         setIsRendering(false)
       }
     },
-    [completedTopics],
+    [playDemoAnimation],
   )
 
   const clientTools = useMemo(
@@ -325,6 +393,32 @@ export default function App() {
   })
 
   useEffect(() => {
+    conversationStateRef.current = {
+      status: conversation.status,
+      isSpeaking: conversation.isSpeaking,
+    }
+  }, [conversation.isSpeaking, conversation.status])
+
+  useEffect(() => {
+    const justStartedSpeaking = conversation.isSpeaking && !wasSpeakingRef.current
+    wasSpeakingRef.current = conversation.isSpeaking
+
+    if (!justStartedSpeaking) {
+      return
+    }
+
+    setPendingDemoAnimations((prev) => {
+      if (prev.length === 0) {
+        return prev
+      }
+
+      const [nextClip, ...rest] = prev
+      applyDemoAnimation(nextClip)
+      return rest
+    })
+  }, [applyDemoAnimation, conversation.isSpeaking])
+
+  useEffect(() => {
     if (!demoSessionExpired) {
       return
     }
@@ -335,6 +429,7 @@ export default function App() {
     pendingAutoKickoffMessageRef.current = null
     sawAgentResponseRef.current = false
     activeTransportRef.current = PRIMARY_TRANSPORT
+    setPendingDemoAnimations([])
     void conversation.endSession().catch(() => {})
   }, [clearAutoKickoffTimer, clearConnectionFallbackTimer, conversation, demoSessionExpired])
 
@@ -363,12 +458,14 @@ export default function App() {
       ...prev,
       { id: String(Date.now()), role: 'user', text },
     ])
-    const result = await handleRenderAnimation({ description: text })
+    const result = STATIC_DEMO_MODE
+      ? playDemoAnimation(text, false)
+      : await handleRenderAnimation({ description: text })
     setMessages((prev) => [
       ...prev,
       { id: String(Date.now() + 1), role: 'ai', text: result ?? 'Done.' },
     ])
-  }, [handleRenderAnimation])
+  }, [handleRenderAnimation, playDemoAnimation])
 
   const startConversation = useCallback(async () => {
     if (demoSessionExpired) {
@@ -423,6 +520,7 @@ export default function App() {
     pendingAutoKickoffMessageRef.current = null
     sawAgentResponseRef.current = false
     activeTransportRef.current = PRIMARY_TRANSPORT
+    setPendingDemoAnimations([])
     await conversation.endSession()
   }, [clearAutoKickoffTimer, clearConnectionFallbackTimer, conversation])
 
@@ -519,15 +617,16 @@ export default function App() {
         isTalking={conversation.isSpeaking}
         currentVideoUrl={currentVideoUrl}
         isRendering={isRendering}
-      completedTopics={completedTopics}
-      onSelectTopic={setCurrentVideoUrl}
-      conversationStatus={conversation.status}
-      isSpaceMode={isSpaceMode}
-      textMode={textMode}
-      demoNotice={demoNotice}
-      onToggleTextMode={() => setTextMode((v) => !v)}
-      messages={messages}
-      onSendMessage={handleSendMessage}
+        completedTopics={completedTopics}
+        demoLibraryTopics={demoLibraryTopics}
+        onSelectTopic={setCurrentVideoUrl}
+        conversationStatus={conversation.status}
+        isSpaceMode={isSpaceMode}
+        textMode={textMode}
+        demoNotice={demoNotice}
+        onToggleTextMode={() => setTextMode((v) => !v)}
+        messages={messages}
+        onSendMessage={handleSendMessage}
       />
       {timerBadge}
     </>

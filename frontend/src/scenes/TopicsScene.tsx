@@ -9,6 +9,7 @@ import { SpatialSidePanel } from '@/components/spatial/SpatialClassroom'
 
 export default function TopicsScene() {
   const [topics, setTopics] = useState<CompletedTopic[]>([])
+  const [libraryTopics, setLibraryTopics] = useState<CompletedTopic[]>([])
   const [currentVideoUrl, setCurrentVideoUrl] = useState<string | null>(null)
 
   useEffect(() => {
@@ -16,6 +17,7 @@ export default function TopicsScene() {
     const onMessage = (e: MessageEvent) => {
       if (e.data?.type === 'topics-state') {
         setTopics(e.data.topics)
+        setLibraryTopics(e.data.libraryTopics ?? [])
         setCurrentVideoUrl(e.data.currentVideoUrl)
       }
     }
@@ -38,6 +40,7 @@ export default function TopicsScene() {
       <SpatialSidePanel kind="topics" style={{ width: '100%', height: '100%' }}>
         <TopicsPanel
           topics={topics}
+          libraryTopics={libraryTopics}
           currentVideoUrl={currentVideoUrl}
           onSelect={handleSelect}
         />
