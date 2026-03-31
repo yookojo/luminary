@@ -14,6 +14,7 @@ export default function TopicsPanel({ topics, currentVideoUrl, onSelect }: Props
     <div style={{
       width: '100%',
       height: '100%',
+      minHeight: 0,
       background: 'linear-gradient(180deg, rgba(30,16,48,0.92) 0%, rgba(18,14,26,0.98) 55%, rgba(14,12,20,0.98) 100%)',
       borderRadius: '18px',
       border: '1px solid rgba(196,181,253,0.22)',
@@ -75,6 +76,10 @@ export default function TopicsPanel({ topics, currentVideoUrl, onSelect }: Props
                 color: 'transparent',
                 position: 'relative',
                 textAlign: 'center',
+                display: '-webkit-box',
+                WebkitLineClamp: 3,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden',
               }}>
                 {topics[topics.length - 1].summary ?? topics[topics.length - 1].title}
               </p>
@@ -115,7 +120,11 @@ export default function TopicsPanel({ topics, currentVideoUrl, onSelect }: Props
       {/* Topic list */}
       <div style={{
         flex: 1,
+        minHeight: 0,
         overflowY: 'auto',
+        overscrollBehavior: 'contain',
+        WebkitOverflowScrolling: 'touch',
+        scrollbarGutter: 'stable',
         padding: '10px',
         display: 'flex',
         flexDirection: 'column',

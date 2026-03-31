@@ -1153,55 +1153,55 @@ export default function GreetingView({ status, isSpeaking, onStart, onStop, onEn
               Guided demo: live voice, curated visual examples.
             </p>
 
-            {!isConnected && !isConnecting && (
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '8px',
+                opacity: isConnecting ? 0.88 : 1,
+                transition: 'opacity 0.2s ease',
+              }}
+            >
+              <span
+                style={{
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  letterSpacing: '0.16em',
+                  textTransform: 'uppercase',
+                  color: 'rgba(255,255,255,0.68)',
+                }}
+              >
+                Best Demo Prompts
+              </span>
               <div
                 style={{
                   display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
+                  flexWrap: 'wrap',
+                  justifyContent: 'center',
                   gap: '8px',
                 }}
               >
-                <span
-                  style={{
-                    fontSize: '11px',
-                    fontWeight: 700,
-                    letterSpacing: '0.16em',
-                    textTransform: 'uppercase',
-                    color: 'rgba(255,255,255,0.62)',
-                  }}
-                >
-                  Best Demo Prompts
-                </span>
-                <div
-                  style={{
-                    display: 'flex',
-                    flexWrap: 'wrap',
-                    justifyContent: 'center',
-                    gap: '8px',
-                  }}
-                >
-                  {STATIC_DEMO_PROMPTS.map((prompt) => (
-                    <span
-                      key={prompt}
-                      style={{
-                        padding: '8px 12px',
-                        borderRadius: '999px',
-                        border: '1px solid rgba(255,255,255,0.10)',
-                        background: 'rgba(255,255,255,0.035)',
-                        color: 'rgba(255,255,255,0.84)',
-                        fontSize: '12px',
-                        fontWeight: 600,
-                        letterSpacing: '-0.01em',
-                        boxShadow: '0 10px 24px rgba(0,0,0,0.16)',
-                      }}
-                    >
-                      {prompt}
-                    </span>
-                  ))}
-                </div>
+                {STATIC_DEMO_PROMPTS.map((prompt) => (
+                  <span
+                    key={prompt}
+                    style={{
+                      padding: '8px 12px',
+                      borderRadius: '999px',
+                      border: '1px solid rgba(255,255,255,0.10)',
+                      background: 'rgba(255,255,255,0.035)',
+                      color: 'rgba(255,255,255,0.84)',
+                      fontSize: '12px',
+                      fontWeight: 600,
+                      letterSpacing: '-0.01em',
+                      boxShadow: '0 10px 24px rgba(0,0,0,0.16)',
+                    }}
+                  >
+                    {prompt}
+                  </span>
+                ))}
               </div>
-            )}
+            </div>
           </div>
         )}
 
