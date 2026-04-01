@@ -124,19 +124,41 @@ function loginPage(error = false) {
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+      body {
+        background:
+          radial-gradient(circle at top, rgba(139, 92, 246, 0.12), transparent 34%),
+          radial-gradient(circle at bottom right, rgba(59, 130, 246, 0.1), transparent 28%),
+          #05050a;
+      }
+
+      .glass-shell {
+        background: rgba(255, 255, 255, 0.04);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.06),
+          0 18px 60px rgba(0, 0, 0, 0.28);
+        backdrop-filter: blur(22px);
+      }
+
+      .glass-panel {
+        background: rgba(255, 255, 255, 0.035);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(18px);
+      }
+    </style>
   </head>
   <body class="min-h-screen bg-black text-white antialiased">
-    <main class="relative flex min-h-screen items-center justify-center overflow-hidden px-6 py-10">
+    <main class="relative flex min-h-screen items-center justify-center overflow-hidden px-5 py-5 md:px-8 md:py-8">
       <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(147,51,234,0.22),_transparent_35%),radial-gradient(circle_at_bottom,_rgba(59,130,246,0.16),_transparent_30%)]"></div>
-      <div class="relative w-full max-w-6xl rounded-[34px] border border-white/10 bg-white/5 p-4 shadow-glow backdrop-blur-xl md:p-5">
-        <div class="grid gap-4 lg:grid-cols-[minmax(340px,420px)_minmax(0,1fr)]">
-          <section class="rounded-[28px] border border-white/10 bg-black/25 p-7">
+      <div class="glass-shell relative z-10 w-full max-w-7xl rounded-[36px] border border-white/10 p-4 md:min-h-[86vh] md:p-5">
+        <div class="grid gap-4 lg:min-h-[82vh] lg:grid-cols-[minmax(360px,430px)_minmax(0,1fr)]">
+          <section class="glass-panel rounded-[30px] border border-white/10 p-7">
             <div class="mb-7 flex items-start justify-between gap-4">
               <div>
                 <p class="mb-2 text-[11px] font-semibold uppercase tracking-[0.34em] text-white/45">Luminary Demo</p>
                 <h1 class="text-3xl font-semibold tracking-[-0.04em]">Protected access</h1>
                 <p class="mt-3 max-w-sm text-sm leading-6 text-white/64">
-                  Unlock the guided classroom demo to hear Luminary teach live while curated visuals play alongside the lesson.
+                  Unlock a guided preview of Luminary's classroom experience. The voice interaction is live, and the visuals are curated to show how learning feels inside the product.
                 </p>
               </div>
               <div class="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-white/55">3 min AI</div>
@@ -197,7 +219,7 @@ function loginPage(error = false) {
             </div>
           </section>
 
-          <section class="rounded-[28px] border border-white/10 bg-white/[0.045] p-4 md:p-5">
+          <section class="glass-panel rounded-[30px] border border-white/10 p-4 md:p-5">
             <div class="mb-4 flex items-center justify-between gap-4">
               <div>
                 <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/48">Demo Preview</p>
@@ -233,11 +255,11 @@ function loginPage(error = false) {
               <div class="mt-4 grid gap-4 text-sm leading-6 text-white/72 md:grid-cols-2">
                 <div>
                   <p class="mb-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/48">Luminary</p>
-                  <p>Your teacher. Your space. Any subject. Anywhere. The teacher everyone deserves. World class education, in your headspace.</p>
+                  <p>A spatial learning experience built to make great teaching feel personal, visual, and close at hand.</p>
                 </div>
                 <div>
                   <p class="mb-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/48">What It Does</p>
-                  <p>Luminary puts a teacher in your space. You say a topic and a teacher appears, speaks to you, and walks you through it with live animations on a floating board. It runs in the browser and in Apple Vision Pro through WebSpatial so the classroom breaks out of the screen and into the room around you.</p>
+                  <p>This demo shows Luminary as a live, voice-driven teacher inside a spatial classroom. The current guided experience focuses on a small set of polished visual lessons so people can feel the teaching style, pacing, and atmosphere of the product.</p>
                 </div>
                 <div>
                   <p class="mb-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/48">Inspiration</p>
