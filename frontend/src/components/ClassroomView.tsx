@@ -8,7 +8,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { initScene } from '@webspatial/react-sdk'
 import { gsap } from 'gsap'
 import type { LessonInfo, CompletedTopic, ChatMessage } from '@/App'
-import { STATIC_DEMO_PROMPTS } from '@/lib/demoCatalog'
+import { STATIC_DEMO_PROMPTS, type StaticDemoPrompt } from '@/lib/demoCatalog'
 import TeacherPanelTabs from './TeacherPanelTabs'
 import BoardPanel from './BoardPanel'
 import NotesBar from './NotesBar'
@@ -31,6 +31,7 @@ interface Props {
   isSpaceMode: boolean
   textMode: boolean
   demoNotice: string | null
+  demoSuggestedPrompt: StaticDemoPrompt | null
   onToggleTextMode: () => void
   messages: ChatMessage[]
   onSendMessage: (text: string) => void
@@ -48,6 +49,7 @@ export default function ClassroomView({
   isSpaceMode,
   textMode,
   demoNotice,
+  demoSuggestedPrompt,
   onToggleTextMode,
   messages,
   onSendMessage,
@@ -215,6 +217,9 @@ export default function ClassroomView({
   const summaryMeta = latestTopic
     ? 'Latest lesson summary'
     : `Starting ${lessonInfo.subject}`
+  const recommendedPrompts = demoSuggestedPrompt
+    ? [demoSuggestedPrompt, ...STATIC_DEMO_PROMPTS.filter((prompt) => prompt !== demoSuggestedPrompt)]
+    : [...STATIC_DEMO_PROMPTS]
 
   useEffect(() => {
     const brandEl = brandRef.current
@@ -292,7 +297,7 @@ export default function ClassroomView({
           <div
             style={{
               marginBottom: '8px',
-              padding: '14px',
+              padding: '12px',
               borderRadius: '14px',
               border: '1px solid rgba(196,181,253,0.14)',
               background: 'linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.02) 100%)',
@@ -300,7 +305,7 @@ export default function ClassroomView({
             }}
           >
             <p style={{
-              margin: '0 0 6px',
+              margin: '0 0 4px',
               fontSize: '11px',
               fontWeight: 800,
               letterSpacing: '0.16em',
@@ -308,16 +313,16 @@ export default function ClassroomView({
               color: 'rgba(226,214,255,0.68)',
               textAlign: 'center',
             }}>
-              Strongest Demo Results
+              Start Here
             </p>
             <p style={{
-              margin: '0 0 12px',
-              fontSize: '12px',
-              lineHeight: 1.55,
+              margin: '0 0 10px',
+              fontSize: '11px',
+              lineHeight: 1.5,
               color: 'rgba(255,255,255,0.72)',
               textAlign: 'center',
             }}>
-              Ask naturally, or start with one of these guided visual prompts.
+              For the cleanest board flow, begin with one of these guided prompts.
             </p>
             <div style={{
               display: 'flex',
@@ -325,16 +330,22 @@ export default function ClassroomView({
               justifyContent: 'center',
               gap: '8px',
             }}>
-              {STATIC_DEMO_PROMPTS.map((prompt) => (
+              {recommendedPrompts.map((prompt) => (
                 <button
                   key={prompt}
                   onClick={() => onSendMessage(prompt)}
                   style={{
                     padding: '8px 11px',
                     borderRadius: '999px',
-                    border: '1px solid rgba(167,72,255,0.26)',
-                    background: 'rgba(124,58,237,0.16)',
-                    color: 'rgba(255,255,255,0.9)',
+                    border: prompt === demoSuggestedPrompt
+                      ? '1px solid rgba(250,204,21,0.34)'
+                      : '1px solid rgba(167,72,255,0.26)',
+                    background: prompt === demoSuggestedPrompt
+                      ? 'rgba(250,204,21,0.14)'
+                      : 'rgba(124,58,237,0.16)',
+                    color: prompt === demoSuggestedPrompt
+                      ? 'rgba(255,248,214,0.96)'
+                      : 'rgba(255,255,255,0.9)',
                     fontSize: '12px',
                     fontWeight: 600,
                     letterSpacing: '-0.01em',
@@ -363,7 +374,7 @@ export default function ClassroomView({
               boxShadow: '0 12px 28px rgba(0,0,0,0.16)',
             }}
           >
-            {demoNotice} Try one of the guided prompts above for the strongest board visuals.
+            {demoNotice} Use the highlighted prompt above for the smoothest visual pivot.
           </div>
         )}
 
@@ -405,7 +416,7 @@ export default function ClassroomView({
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() } }}
-          placeholder="Describe an animation…"
+          placeholder="Transcript…"
           disabled={isRendering}
           className="lm-animate-input"
           style={{
