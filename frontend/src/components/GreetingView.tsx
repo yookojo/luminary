@@ -1145,7 +1145,7 @@ export default function GreetingView({ status, isSpeaking, onStart, onStop, onEn
                 textAlign: 'center',
               }}
             >
-              Guided demo: live voice, curated visual examples.
+              Guided demo: live voice, curated visual examples built for the smoothest first impression.
             </p>
 
             <div
@@ -1164,11 +1164,23 @@ export default function GreetingView({ status, isSpeaking, onStart, onStop, onEn
                   fontWeight: 700,
                   letterSpacing: '0.16em',
                   textTransform: 'uppercase',
-                  color: 'rgba(255,255,255,0.68)',
+                  color: 'rgba(255,255,255,0.74)',
                 }}
               >
-                Best Demo Prompts
+                Best First Prompts
               </span>
+              <p
+                style={{
+                  margin: 0,
+                  maxWidth: '420px',
+                  color: 'rgba(255,255,255,0.62)',
+                  fontSize: '11px',
+                  lineHeight: 1.5,
+                  textAlign: 'center',
+                }}
+              >
+                Start with one of these to get the strongest board visuals right away.
+              </p>
               <div
                 style={{
                   display: 'flex',

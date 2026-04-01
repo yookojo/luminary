@@ -13,6 +13,7 @@ export interface DemoLibraryTopic {
   keyPoints: string[]
   videoUrl: string
   demoGroupId?: string
+  featured?: boolean
 }
 
 export interface DemoHistoryItem {
@@ -24,6 +25,7 @@ interface DemoAnimationClip {
   summary: string
   keyPoints: string[]
   videoUrl: string
+  featured?: boolean
 }
 
 interface DemoAnimationGroup {
@@ -37,6 +39,42 @@ export const STATIC_DEMO_PROMPTS = [
   'matrix addition',
   'scalar multiplication',
 ] as const
+
+export type StaticDemoPrompt = typeof STATIC_DEMO_PROMPTS[number]
+
+const SUPPORTED_DEMO_PROMPT_SUGGESTIONS: ReadonlyArray<{
+  prompt: StaticDemoPrompt
+  keywords: readonly string[]
+}> = [
+  {
+    prompt: '2x2 matrices',
+    keywords: [
+      'matrix',
+      'matrices',
+      '2x2',
+      '2 x 2',
+      'row',
+      'rows',
+      'column',
+      'columns',
+      'grid',
+      'determinant',
+      'determinants',
+      'eigenvalue',
+      'eigenvalues',
+      'eigenvector',
+      'eigenvectors',
+    ],
+  },
+  {
+    prompt: 'matrix addition',
+    keywords: ['add', 'addition', 'plus', 'sum', 'corresponding', 'combine'],
+  },
+  {
+    prompt: 'scalar multiplication',
+    keywords: ['scalar', 'vector', 'scale', 'scaled', 'stretch', 'shrink', 'magnitude'],
+  },
+]
 
 const DEMO_ANIMATION_GROUPS: readonly DemoAnimationGroup[] = [
   {
@@ -70,6 +108,7 @@ const DEMO_ANIMATION_GROUPS: readonly DemoAnimationGroup[] = [
           'Matrix as a single unit',
         ],
         videoUrl: '/demo-media/matrix-intro-1.mp4',
+        featured: true,
       },
       {
         title: 'Matrix organization',
@@ -80,6 +119,7 @@ const DEMO_ANIMATION_GROUPS: readonly DemoAnimationGroup[] = [
           'Structure makes patterns easier to spot',
         ],
         videoUrl: '/demo-media/matrix-intro-2.mp4',
+        featured: true,
       },
       {
         title: 'Rectangular matrix arrays',
@@ -90,6 +130,7 @@ const DEMO_ANIMATION_GROUPS: readonly DemoAnimationGroup[] = [
           'Layout supports comparison and computation',
         ],
         videoUrl: '/demo-media/matrix-intro-3.mp4',
+        featured: true,
       },
       {
         title: 'Matrix continuation',
@@ -100,6 +141,7 @@ const DEMO_ANIMATION_GROUPS: readonly DemoAnimationGroup[] = [
           'The whole matrix is a single mathematical object',
         ],
         videoUrl: '/demo-media/matrix-intro-4.mp4',
+        featured: true,
       },
     ],
   },
@@ -116,6 +158,7 @@ const DEMO_ANIMATION_GROUPS: readonly DemoAnimationGroup[] = [
           'The result keeps the same shape',
         ],
         videoUrl: '/demo-media/matrix-addition-1.mp4',
+        featured: true,
       },
       {
         title: 'Matrix addition continuation',
@@ -126,6 +169,7 @@ const DEMO_ANIMATION_GROUPS: readonly DemoAnimationGroup[] = [
           'The final matrix keeps the same dimensions',
         ],
         videoUrl: '/demo-media/matrix-addition-2.mp4',
+        featured: true,
       },
     ],
   },
@@ -142,6 +186,7 @@ const DEMO_ANIMATION_GROUPS: readonly DemoAnimationGroup[] = [
           'Negative scalars reverse direction',
         ],
         videoUrl: '/demo-media/scalar-multiplication-1.mp4',
+        featured: true,
       },
       {
         title: 'Scalar multiplication with vectors',
@@ -152,6 +197,7 @@ const DEMO_ANIMATION_GROUPS: readonly DemoAnimationGroup[] = [
           'Visual contrast makes scaling intuitive',
         ],
         videoUrl: '/demo-media/scalar-multiplication-2.mp4',
+        featured: true,
       },
       {
         title: 'Vector scaling',
@@ -162,6 +208,7 @@ const DEMO_ANIMATION_GROUPS: readonly DemoAnimationGroup[] = [
           'Smaller scalars shrink the vector',
         ],
         videoUrl: '/demo-media/scalar-multiplication-3.mp4',
+        featured: true,
       },
       {
         title: 'Vector magnitude',
@@ -172,6 +219,7 @@ const DEMO_ANIMATION_GROUPS: readonly DemoAnimationGroup[] = [
           'Visual length builds intuition quickly',
         ],
         videoUrl: '/demo-media/scalar-multiplication-4.mp4',
+        featured: true,
       },
     ],
   },
@@ -188,6 +236,7 @@ const EXTRA_DEMO_LIBRARY_TOPICS: readonly DemoLibraryTopic[] = [
       'Strong opening demo clip',
     ],
     videoUrl: '/demo-media/concept-overview.mp4',
+    featured: true,
   },
   {
     id: 'matrix_intro_overview',
@@ -265,6 +314,7 @@ const EXTRA_DEMO_LIBRARY_TOPICS: readonly DemoLibraryTopic[] = [
       'Memorable space visual',
     ],
     videoUrl: '/demo-media/solar-system.mp4',
+    featured: true,
   },
   {
     id: 'vector_addition_1',
@@ -276,6 +326,7 @@ const EXTRA_DEMO_LIBRARY_TOPICS: readonly DemoLibraryTopic[] = [
       'Direction and length both matter',
     ],
     videoUrl: '/demo-media/vector-addition-1.mp4',
+    featured: true,
   },
   {
     id: 'vector_addition_2',
@@ -320,6 +371,7 @@ const EXTRA_DEMO_LIBRARY_TOPICS: readonly DemoLibraryTopic[] = [
       'Excellent process visual',
     ],
     videoUrl: '/demo-media/markov-chain.mp4',
+    featured: true,
   },
   {
     id: 'expanding_circle',
@@ -394,6 +446,30 @@ export function selectDemoAnimation(
   }
 }
 
+export function suggestDemoPrompt(input: string): StaticDemoPrompt {
+  const text = normalizeText(input)
+  let bestPrompt: StaticDemoPrompt = STATIC_DEMO_PROMPTS[0]
+  let bestScore = -1
+
+  for (const suggestion of SUPPORTED_DEMO_PROMPT_SUGGESTIONS) {
+    let score = 0
+
+    for (const rawKeyword of suggestion.keywords) {
+      const keyword = normalizeText(rawKeyword)
+      if (text.includes(keyword)) {
+        score += keyword.length
+      }
+    }
+
+    if (score > bestScore) {
+      bestScore = score
+      bestPrompt = suggestion.prompt
+    }
+  }
+
+  return bestPrompt
+}
+
 export function getDemoLibraryTopics(): DemoLibraryTopic[] {
   const groupedTopics = DEMO_ANIMATION_GROUPS.flatMap((group) =>
     group.clips.map((clip, index) => ({
@@ -403,6 +479,7 @@ export function getDemoLibraryTopics(): DemoLibraryTopic[] {
       keyPoints: clip.keyPoints,
       videoUrl: clip.videoUrl,
       demoGroupId: group.groupId,
+      featured: clip.featured ?? false,
     })),
   )
 

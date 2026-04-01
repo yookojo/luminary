@@ -1,7 +1,13 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react'
 import { useConversation } from '@elevenlabs/react'
 import { renderManim, createObjectUrl, summarizeText } from '@/lib/api'
-import { getDemoLibraryTopics, selectDemoAnimation, type DemoAnimation } from '@/lib/demoCatalog'
+import {
+  getDemoLibraryTopics,
+  selectDemoAnimation,
+  suggestDemoPrompt,
+  type DemoAnimation,
+  type StaticDemoPrompt,
+} from '@/lib/demoCatalog'
 import GreetingView from '@/components/GreetingView'
 import ClassroomView from '@/components/ClassroomView'
 
@@ -29,6 +35,7 @@ export interface CompletedTopic {
   keyPoints?: string[]
   videoUrl: string
   demoGroupId?: string
+  featured?: boolean
 }
 
 export interface ChatMessage {
@@ -51,6 +58,8 @@ const AUTO_KICKOFF_DELAY_MS = 900
 const CONNECTION_FALLBACK_DELAY_MS = 2800
 const PRIMARY_TRANSPORT: ConversationTransport = 'websocket'
 const SECONDARY_TRANSPORT: ConversationTransport = 'webrtc'
+const DEMO_VISUAL_LEAD_IN_MS = 700
+const DEMO_VISUAL_CHAIN_DELAY_MS = 1200
 const DEMO_SESSION_ENDED_MESSAGE = 'This 3-minute demo session has ended. Ask for access again to continue.'
 const UNSUPPORTED_DEMO_MESSAGE = 'This guided demo currently shows the strongest visuals for 2x2 matrices, matrix addition, and scalar multiplication.'
 const STATIC_DEMO_MODE = import.meta.env.VITE_STATIC_DEMO_MODE === 'true'
@@ -69,9 +78,11 @@ export default function App() {
   const [demoRemainingSeconds, setDemoRemainingSeconds] = useState<number | null>(null)
   const [demoSessionExpired, setDemoSessionExpired] = useState(false)
   const [demoNotice, setDemoNotice] = useState<string | null>(null)
+  const [demoSuggestedPrompt, setDemoSuggestedPrompt] = useState<StaticDemoPrompt | null>(null)
   const [pendingDemoAnimations, setPendingDemoAnimations] = useState<QueuedDemoAnimation[]>([])
   const autoKickoffTimerRef = useRef<number | null>(null)
   const connectionFallbackTimerRef = useRef<number | null>(null)
+  const demoVisualTimerRef = useRef<number | null>(null)
   const pendingAutoKickoffMessageRef = useRef<string | null>(null)
   const sawAgentResponseRef = useRef(false)
   const activeTransportRef = useRef<ConversationTransport>(PRIMARY_TRANSPORT)
@@ -96,6 +107,7 @@ export default function App() {
             keyPoints: topic.keyPoints,
             videoUrl: topic.videoUrl,
             demoGroupId: topic.demoGroupId,
+            featured: topic.featured,
           }))
         : []
     ),
@@ -121,43 +133,12 @@ export default function App() {
         keyPoints: clip.keyPoints,
         videoUrl: clip.playbackUrl,
         demoGroupId: clip.demoGroupId,
+        featured: true,
       },
     ]))
     setDemoNotice(null)
+    setDemoSuggestedPrompt(null)
   }, [])
-
-  const playDemoAnimation = useCallback((description: string, syncWithSpeech: boolean) => {
-    const effectiveHistory = [
-      ...completedTopicsRef.current,
-      ...pendingDemoAnimationsRef.current,
-    ]
-    const clip = selectDemoAnimation(description, effectiveHistory)
-
-    if (!clip) {
-      setDemoNotice(UNSUPPORTED_DEMO_MESSAGE)
-      return `${UNSUPPORTED_DEMO_MESSAGE} Try one of those prompts for the board.`
-    }
-
-    const historyId = String(Date.now() + Math.random())
-    const queuedClip: QueuedDemoAnimation = {
-      ...clip,
-      historyId,
-      playbackUrl: `${clip.videoUrl}?demo=${historyId}`,
-    }
-    const shouldWaitForSpeech = syncWithSpeech
-      && conversationStateRef.current.status === 'connected'
-      && !conversationStateRef.current.isSpeaking
-
-    setDemoNotice(null)
-
-    if (shouldWaitForSpeech) {
-      setPendingDemoAnimations((prev) => [...prev, queuedClip])
-      return 'The next guided board visual is queued and will appear as the explanation continues.'
-    }
-
-    applyDemoAnimation(queuedClip)
-    return 'A curated demo animation is now on the board.'
-  }, [applyDemoAnimation])
 
   const clearAutoKickoffTimer = useCallback(() => {
     if (autoKickoffTimerRef.current !== null) {
@@ -181,6 +162,83 @@ export default function App() {
       connectionFallbackTimerRef.current = null
     }
   }, [])
+
+  const clearDemoVisualTimer = useCallback(() => {
+    if (demoVisualTimerRef.current !== null) {
+      window.clearTimeout(demoVisualTimerRef.current)
+      demoVisualTimerRef.current = null
+    }
+  }, [])
+
+  const scheduleQueuedDemoAnimationPlayback = useCallback((delay: number) => {
+    if (demoVisualTimerRef.current !== null) {
+      return
+    }
+
+    demoVisualTimerRef.current = window.setTimeout(() => {
+      demoVisualTimerRef.current = null
+
+      let nextClip: QueuedDemoAnimation | null = null
+      let hasMore = false
+
+      setPendingDemoAnimations((prev) => {
+        if (prev.length === 0) {
+          return prev
+        }
+
+        const [first, ...rest] = prev
+        nextClip = first
+        hasMore = rest.length > 0
+        return rest
+      })
+
+      if (nextClip) {
+        applyDemoAnimation(nextClip)
+
+        if (hasMore && conversationStateRef.current.isSpeaking) {
+          scheduleQueuedDemoAnimationPlayback(DEMO_VISUAL_CHAIN_DELAY_MS)
+        }
+      }
+    }, delay)
+  }, [applyDemoAnimation, clearDemoVisualTimer])
+
+  const playDemoAnimation = useCallback((description: string, syncWithSpeech: boolean) => {
+    const effectiveHistory = [
+      ...completedTopicsRef.current,
+      ...pendingDemoAnimationsRef.current,
+    ]
+    const clip = selectDemoAnimation(description, effectiveHistory)
+
+    if (!clip) {
+      const suggestedPrompt = suggestDemoPrompt(description)
+      setDemoSuggestedPrompt(suggestedPrompt)
+      setDemoNotice(`${UNSUPPORTED_DEMO_MESSAGE} The closest guided path right now is ${suggestedPrompt}.`)
+      return `${UNSUPPORTED_DEMO_MESSAGE} The closest guided path right now is ${suggestedPrompt}.`
+    }
+
+    const historyId = String(Date.now() + Math.random())
+    const queuedClip: QueuedDemoAnimation = {
+      ...clip,
+      historyId,
+      playbackUrl: `${clip.videoUrl}?demo=${historyId}`,
+    }
+    const shouldSyncToSpeech = syncWithSpeech
+      && conversationStateRef.current.status === 'connected'
+
+    setDemoNotice(null)
+    setDemoSuggestedPrompt(null)
+
+    if (shouldSyncToSpeech) {
+      setPendingDemoAnimations((prev) => [...prev, queuedClip])
+      if (conversationStateRef.current.isSpeaking) {
+        scheduleQueuedDemoAnimationPlayback(DEMO_VISUAL_LEAD_IN_MS)
+      }
+      return 'The next guided board visual is queued and will appear with the next teaching beat.'
+    }
+
+    applyDemoAnimation(queuedClip)
+    return 'A curated demo animation is now on the board.'
+  }, [applyDemoAnimation, scheduleQueuedDemoAnimationPlayback])
 
   const scheduleAutoKickoff = useCallback((conversationApi: { sendUserMessage: (text: string) => void }) => {
     clearAutoKickoffTimer()
@@ -275,7 +333,8 @@ export default function App() {
   useEffect(() => () => {
     clearAutoKickoffTimer()
     clearConnectionFallbackTimer()
-  }, [clearAutoKickoffTimer, clearConnectionFallbackTimer])
+    clearDemoVisualTimer()
+  }, [clearAutoKickoffTimer, clearConnectionFallbackTimer, clearDemoVisualTimer])
 
   useEffect(() => {
     if (accessRole !== 'demo' || demoRemainingSeconds === null) {
@@ -403,20 +462,17 @@ export default function App() {
     const justStartedSpeaking = conversation.isSpeaking && !wasSpeakingRef.current
     wasSpeakingRef.current = conversation.isSpeaking
 
-    if (!justStartedSpeaking) {
+    if (!conversation.isSpeaking) {
+      clearDemoVisualTimer()
       return
     }
 
-    setPendingDemoAnimations((prev) => {
-      if (prev.length === 0) {
-        return prev
-      }
+    if (!justStartedSpeaking && pendingDemoAnimationsRef.current.length === 0) {
+      return
+    }
 
-      const [nextClip, ...rest] = prev
-      applyDemoAnimation(nextClip)
-      return rest
-    })
-  }, [applyDemoAnimation, conversation.isSpeaking])
+    scheduleQueuedDemoAnimationPlayback(DEMO_VISUAL_LEAD_IN_MS)
+  }, [clearDemoVisualTimer, conversation.isSpeaking, scheduleQueuedDemoAnimationPlayback])
 
   useEffect(() => {
     if (!demoSessionExpired) {
@@ -429,9 +485,10 @@ export default function App() {
     pendingAutoKickoffMessageRef.current = null
     sawAgentResponseRef.current = false
     activeTransportRef.current = PRIMARY_TRANSPORT
+    clearDemoVisualTimer()
     setPendingDemoAnimations([])
     void conversation.endSession().catch(() => {})
-  }, [clearAutoKickoffTimer, clearConnectionFallbackTimer, conversation, demoSessionExpired])
+  }, [clearAutoKickoffTimer, clearConnectionFallbackTimer, clearDemoVisualTimer, conversation, demoSessionExpired])
 
   const handleEnterDirectly = useCallback((topic: string, subject: string) => {
     if (demoSessionExpired) {
@@ -520,9 +577,10 @@ export default function App() {
     pendingAutoKickoffMessageRef.current = null
     sawAgentResponseRef.current = false
     activeTransportRef.current = PRIMARY_TRANSPORT
+    clearDemoVisualTimer()
     setPendingDemoAnimations([])
     await conversation.endSession()
-  }, [clearAutoKickoffTimer, clearConnectionFallbackTimer, conversation])
+  }, [clearAutoKickoffTimer, clearConnectionFallbackTimer, clearDemoVisualTimer, conversation])
 
   const demoTimerLabel = demoRemainingSeconds === null
     ? null
@@ -624,6 +682,7 @@ export default function App() {
         isSpaceMode={isSpaceMode}
         textMode={textMode}
         demoNotice={demoNotice}
+        demoSuggestedPrompt={demoSuggestedPrompt}
         onToggleTextMode={() => setTextMode((v) => !v)}
         messages={messages}
         onSendMessage={handleSendMessage}

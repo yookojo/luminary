@@ -156,6 +156,8 @@ export default function TopicsPanel({
   const visibleLibraryTopics = libraryTopics.filter(
     (topic) => !coveredUrls.has(normalizeVideoUrl(topic.videoUrl)),
   )
+  const featuredLibraryTopics = visibleLibraryTopics.filter((topic) => topic.featured)
+  const moreLibraryTopics = visibleLibraryTopics.filter((topic) => !topic.featured)
   const featuredTopic = topics[topics.length - 1] ?? visibleLibraryTopics[0] ?? null
 
   return (
@@ -331,15 +333,31 @@ export default function TopicsPanel({
           </>
         )}
 
-        {visibleLibraryTopics.length > 0 && (
+        {featuredLibraryTopics.length > 0 && (
           <>
-            <SectionLabel>Full Demo Library</SectionLabel>
-            {visibleLibraryTopics.map((topic) => (
+            <SectionLabel>Featured Demo Visuals</SectionLabel>
+            {featuredLibraryTopics.map((topic) => (
               <TopicCard
                 key={topic.id}
                 topic={topic}
                 badge="demo"
                 badgeTitle="Demo library visual"
+                currentVideoUrl={currentVideoUrl}
+                onSelect={onSelect}
+              />
+            ))}
+          </>
+        )}
+
+        {moreLibraryTopics.length > 0 && (
+          <>
+            <SectionLabel>More Demo Visuals</SectionLabel>
+            {moreLibraryTopics.map((topic) => (
+              <TopicCard
+                key={topic.id}
+                topic={topic}
+                badge="more"
+                badgeTitle="Additional demo visual"
                 currentVideoUrl={currentVideoUrl}
                 onSelect={onSelect}
               />
