@@ -203,6 +203,12 @@ export default function ClassroomView({
   const brandIsActive = conversationStatus === 'connected' || conversationStatus === 'connecting'
   const brandGlowStrength = isTalking ? 1 : brandIsActive ? 0.72 : 0.42
   const latestTopic = completedTopics[completedTopics.length - 1] ?? null
+  const normalizedCurrentVideoUrl = currentVideoUrl ? currentVideoUrl.split('?')[0] : null
+  const activeTopic = normalizedCurrentVideoUrl
+    ? [...completedTopics].reverse().find((topic) => topic.videoUrl.split('?')[0] === normalizedCurrentVideoUrl)
+      ?? demoLibraryTopics.find((topic) => topic.videoUrl.split('?')[0] === normalizedCurrentVideoUrl)
+      ?? null
+    : null
   const lessonSummary = latestTopic?.summary
     ?? latestTopic?.title
     ?? `Beginning with ${lessonInfo.topic} in ${lessonInfo.subject}.`
@@ -602,6 +608,7 @@ export default function ClassroomView({
                 videoUrl={currentVideoUrl}
                 isRendering={isRendering}
                 topic={lessonInfo.topic}
+                activeVisualTitle={activeTopic?.title ?? null}
               />
             </div>
           </>
@@ -614,6 +621,7 @@ export default function ClassroomView({
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '10px',
+                overflow: 'hidden',
               }}>
               <div style={{
                 flex: effectiveTextMode ? '1 1 50%' : '0 0 52%',
@@ -624,7 +632,7 @@ export default function ClassroomView({
                   <TeacherPanelTabs isTalking={isTalking} isSpaceMode={isSpaceMode} />
                 )}
               </div>
-              <div style={{ flex: 1, minHeight: 0, display: 'flex' }}>
+              <div style={{ flex: '1 1 0%', minHeight: 0, height: 0, display: 'flex', overflow: 'hidden' }}>
                 {historyPanel}
               </div>
             </div>
@@ -635,6 +643,7 @@ export default function ClassroomView({
                 videoUrl={currentVideoUrl}
                 isRendering={isRendering}
                 topic={lessonInfo.topic}
+                activeVisualTitle={activeTopic?.title ?? null}
               />
             </div>
           </>

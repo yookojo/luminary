@@ -6,9 +6,10 @@ interface Props {
   videoUrl: string | null
   isRendering: boolean
   topic: string
+  activeVisualTitle?: string | null
 }
 
-export default function BoardPanel({ videoUrl, isRendering, topic }: Props) {
+export default function BoardPanel({ videoUrl, isRendering, topic, activeVisualTitle }: Props) {
   return (
     <div style={{
       width: '100%',
@@ -27,6 +28,8 @@ export default function BoardPanel({ videoUrl, isRendering, topic }: Props) {
         borderBottom: '1px solid rgba(167,72,255,0.08)',
         display: 'flex',
         alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: '16px',
         flexShrink: 0,
         position: 'relative',
         zIndex: 2,
@@ -41,6 +44,21 @@ export default function BoardPanel({ videoUrl, isRendering, topic }: Props) {
         }}>
           {topic}
         </span>
+        {activeVisualTitle && (
+          <span style={{
+            maxWidth: '55%',
+            fontSize: '11px',
+            fontWeight: 600,
+            color: 'rgba(255,255,255,0.68)',
+            letterSpacing: '-0.01em',
+            textAlign: 'right',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+          }}>
+            {activeVisualTitle}
+          </span>
+        )}
       </div>
 
       {/* Main area */}

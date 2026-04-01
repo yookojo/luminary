@@ -162,6 +162,8 @@ export default function TopicsPanel({
     <div style={{
       width: '100%',
       height: '100%',
+      flex: '1 1 0%',
+      maxHeight: '100%',
       minHeight: 0,
       overflow: 'hidden',
       background: 'linear-gradient(180deg, rgba(30,16,48,0.92) 0%, rgba(18,14,26,0.98) 55%, rgba(14,12,20,0.98) 100%)',
@@ -286,7 +288,9 @@ export default function TopicsPanel({
       <div
         className="lm-topics-scroll"
         style={{
-          flex: '1 1 auto',
+          flex: '1 1 0%',
+          height: 0,
+          maxHeight: '100%',
           minHeight: 0,
           overflowY: 'auto',
           overflowX: 'hidden',
